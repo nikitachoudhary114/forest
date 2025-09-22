@@ -1,31 +1,44 @@
-"use client";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { signOut } from "next-auth/react";
-import { User } from "lucide-react";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { PrismaClient } from "@prisma/client";
 import Image from "next/image";
+import { User } from "lucide-react";
+import { authOptions } from "@/lib/authOptions";
+import SignOutButton from "./SignOutButton";
 
-export default function Dashboard() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
 
-  useEffect(() => {
-    if (status === "unauthenticated") router.push("/login");
-  }, [status, router]);
+const prisma = new PrismaClient();
 
-  if (status === "loading") return <p>Loading...</p>;
+export default async function Dashboard() {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    redirect("/login"); // redirect if not logged in
+  }
+
+  // ✅ Fetch user from DB using Prisma
+  const user = await prisma.user.findUnique({
+    where: { email: session.user?.email || "" },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      totalCoins: true,
+      totalTrees: true,
+      image: true,
+    },
+  });
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
       <div className="text-2xl font-bold">Dashboard</div>
       <div>Forest app 🌲</div>
-
-      {session?.user && (
+      <SignOutButton/>
+      {user && (
         <div className="flex items-center space-x-2">
-          {session?.user?.image ? (
+          {user.image ? (
             <Image
-              src={session.user.image}
+              src={user.image}
               alt="User avatar"
               width={48}
               height={48}
@@ -34,17 +47,16 @@ export default function Dashboard() {
           ) : (
             <User />
           )}
-
-          <span>{session.user.name || session.user.email}</span>
+          <span>{user.name || user.email}</span>
         </div>
       )}
 
-      <button
-        className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
-        onClick={() => signOut({ callbackUrl: "/login" })}
-      >
-        Sign Out
-      </button>
+      <h1>Profile</h1>
+      <div>Name: {user?.name}</div>
+      <div>Total Coins: {user?.totalCoins}</div>
+      <div>Total Trees: {user?.totalTrees}</div>
     </div>
   );
 }
+
+
