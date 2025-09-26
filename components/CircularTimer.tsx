@@ -30,7 +30,7 @@ export default function CircularTimer({
         trackColor="#E5E7EB" // Tailwind gray-200
         data={Array.from({ length: maxMinutes }, (_, i) => i + 1)}
         dataIndex={value - 1}
-        onChange={(val: number) => onChange(val)}
+        onChange={(val: string | number) => onChange(Number(val))}
       />
     </div>
   );
