@@ -17,7 +17,7 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
-
+console.log(session)
     const body = await req.json();
     const time = body.duration; // minutes
 
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
 
     const userFocusSession = await prisma.focusSession.create({
       data: {
-        userId: (session.user as { id: string }).id,
+        userId: session.user.id,
         duration: time,
         status: "Running",
         startTime: new Date(),

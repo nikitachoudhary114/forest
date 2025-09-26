@@ -51,6 +51,20 @@ export const authOptions: NextAuthOptions = {
     newUser: "/dashboard",
   },
   callbacks: {
+    async jwt({ token, user }) {
+      // Persist user.id into the token on login
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      // Expose id inside session.user
+      if (session.user) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
     async redirect({ url }) {
       if (url) return url;
       return "/dashboard";
